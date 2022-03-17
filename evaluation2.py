@@ -2,15 +2,16 @@ from operator import le
 from matplotlib import ticker
 import pandas as pd
 
-def evaluate(bid_const,ask_const,tickers,df,total, interval, sys_name):
+def evaluate(bid_const,ask_const,loss_const,tickers,df,total, interval, sys_name):
     df = df
     bid_const = bid_const
     ask_const = ask_const
 
     tickers = tickers
+    interval_number = interval[3:]
     box = []
     for i in range(len(tickers)):
-        xlsx = pd.read_excel('./testdata/{}/{}/log/B{}A{}/{}_{}_{}_{}.xlsx'.format(interval,sys_name,bid_const,ask_const,tickers[i],sys_name,bid_const,ask_const))
+        xlsx = pd.read_excel('./testdata/{}/{}/log/B{}A{}L{}/{}_minute{}_{}_{}_{}_{}.xlsx'.format(interval,sys_name,bid_const,ask_const,loss_const,tickers[i],interval_number,sys_name,bid_const,ask_const,loss_const))
         trade_number = len(xlsx)
         win_number = 0
         for j in range(len(xlsx)):

@@ -4,13 +4,13 @@ import pandas as pd
 from pyparsing import col
 import os
 
-def backtest(bid_const, ask_const, tickers):
+def backtest(bid_const, ask_const,loss_const, tickers,interval,sys_name):
     bid_const = bid_const
     ask_const = ask_const
 
     tickers = tickers
-    intervals = ["minute60"]
-    os.makedirs('./testdata/temp/B{}A{}'.format(bid_const,ask_const),exist_ok=True)
+    os.makedirs('./testdata/{}/{}/log/B{}A{}L{}'.format(interval,sys_name,bid_const,ask_const,loss_const),exist_ok=True)
+    interval_number = interval[3:]
     for i in range(len(tickers)):
         box = []
         balance = 1000000
@@ -24,34 +24,36 @@ def backtest(bid_const, ask_const, tickers):
         Sprice = 0
         volume = 0
 
-        xlsx = pd.read_excel('./testdata/{}_minute60.xlsx'.format(tickers[i]))
-        xlsx = xlsx.iloc[200:,:]
+        xlsx = pd.read_excel('./testdata/{}/{}_minute{}.xlsx'.format(interval,tickers[i],interval_number))
+        xlsx = xlsx.iloc[2:,:]
         for j in range(len(xlsx)):
             if pos == False:
-                target_price = xlsx['192MA'].iloc[j] + (bid_const * xlsx['24ATR'].iloc[j])
-                if (xlsx['high'].iloc[j]>target_price) and (xlsx['24MA'].iloc[j]>xlsx['48MA'].iloc[j]):
+                target_price = xlsx['open'].iloc[j] + (bid_const * xlsx['delta'].iloc[j])
+                if (xlsx['high'].iloc[j]>target_price):
                     pos = True
                     Bdate = xlsx.iloc[j,0]
                     Bprice = target_price
                     volume = balance/xlsx.iloc[j,4]
                     
             elif pos == True:
-                target_price = xlsx['192MA'].iloc[j] + (ask_const * xlsx['24ATR'].iloc[j])
-                if xlsx['low'].iloc[j]<target_price:
+                target_price = Bprice * ask_const
+                if (xlsx['high'].iloc[j]>target_price):
                     pos = False
                     Sdate = xlsx.iloc[j,0]
                     Sprice = target_price
                     balance = volume*xlsx.iloc[j,4]
                     current_state = [Bdate,Sdate,ticker,pos,Bprice,Sprice,volume,balance]
                     box.append(current_state)
-                elif xlsx['24MA'].iloc[j]<xlsx['48MA'].iloc[j]:
+
+                elif xlsx['low'].iloc[j]<Bprice*loss_const:
                     pos = False
                     Sdate = xlsx.iloc[j,0]
-                    Sprice = xlsx.iloc[j,4]
+                    Sprice = xlsx['close'].iloc[j]
                     balance = volume*xlsx.iloc[j,4]
                     current_state = [Bdate,Sdate,ticker,pos,Bprice,Sprice,volume,balance]
                     box.append(current_state)
+
         df = pd.DataFrame(box,columns=['Bdate','Sdate','ticker','pos','Bprice','Sprice','Volume','balance'])
-        df.to_excel('./testdata/temp/B{}A{}/{}_minute60_history_{}_{}.xlsx'.format(bid_const,ask_const,tickers[i],bid_const,ask_const),index=False)
+        df.to_excel('./testdata/{}/{}/log/B{}A{}L{}/{}_minute{}_{}_{}_{}_{}.xlsx'.format(interval,sys_name ,bid_const,ask_const,loss_const,tickers[i],interval_number,sys_name,bid_const,ask_const,loss_const),index=False)
         print("finish {}".format(tickers[i]))
 

@@ -23,3 +23,13 @@ def ATR(data,atr_period):
         TR = round((numpy.mean(True_range_box)*0.9),2)
         atr.append(TR)
     return atr
+
+def delta(data):
+    delta = [0]
+    for i in range(1,len(data)):
+        if i == len(data)-1:
+            d = 0
+        else:
+            d = data['high'].iloc[i-1] - data['low'].iloc[i-1]
+        delta.append(d)
+    return delta
